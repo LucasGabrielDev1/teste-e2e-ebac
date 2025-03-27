@@ -13,7 +13,7 @@ context('Funcionalidade Login', () => {
     });
 
     afterEach(() => {
-        cy.screenshot()
+        //cy.screenshot()
     });
 
     it('Login com sucesso usando Comando customizado', () => {
@@ -34,5 +34,5 @@ context('Funcionalidade Login', () => {
         cy.get('.woocommerce-form > .button').click()
         cy.get('.page-title').should('contain', 'Minha conta')
         cy.get('.woocommerce-MyAccount-content > :nth-child(2)').should('contain', 'Olá, aluno_ebac')
-    })
+    });
 })
