@@ -1,69 +1,84 @@
 /// <reference types="cypress" />
 
 context('Exercicio - Testes End-to-end - Fluxo de pedido', () => {
-  /*  Como cliente 
-      Quero acessar a Loja EBAC 
-      Para fazer um pedido de 4 produtos 
-      Fazendo a escolha dos produtos
-      Adicionando ao carrinho
-      Preenchendo todas opções no checkout
-      E validando minha compra ao final */
 
+  const dadosLogin = {
+    email: 'lukinhascop1@gmail.com',
+    senha: 'superonze11',
+  };
 
-  it('Acessando loja', () => {
-    // Acessando Loja
-    cy.visit('http://lojaebac.ebaconline.art.br/')
-    cy.get('.icon-user-unfollow').click()
-    //- LOGIN NO SITE EBAC
-    cy.get('#username').type('lukinhascop1@gmail.com')
-    cy.get('#password').type('superonze11')
-    cy.get('.woocommerce-form > .button').click() 
-    //- SELECIONAR ITENS
-    cy.get('#primary-menu > .menu-item-629 > a').click()
-    cy.get('.post-2559 > .product-block').click()
-    cy.get('.button-variable-item-XS').click()
-    cy.get('.button-variable-item-Green').click()
-    cy.get('.input-text').clear().type(1)
-    cy.get('.single_add_to_cart_button').click()
-    //SELENCIONANDO OUTRO ITEM
-    cy.get('#primary-menu > .menu-item-629 > a').click()
-    cy.get('.post-3073 > .product-block').click()
-    cy.get('.button-variable-item-32').click()
-    cy.get('.button-variable-item-Brown').click()
-    cy.get('.input-text').clear().type(1)
-    cy.get('.single_add_to_cart_button').click()
-    //SELENCIONANDO OUTRO ITEM
-    cy.get('#primary-menu > .menu-item-629 > a').click()
-    cy.get('.post-3374 > .product-block').click()
-    cy.get('.button-variable-item-34').click()
-    cy.get(':nth-child(2) > .value > .variable-items-wrapper > .variable-item').click()
-    cy.get('.input-text').clear().type(1)
-    cy.get('.single_add_to_cart_button').click()
-    //SELENCIONANDO OUTRO ITEM
-    cy.get('#primary-menu > .menu-item-629 > a').click()
-    cy.get('.post-3964 > .product-block').click()
-    cy.get('.button-variable-item-S').click()
-    cy.get('.button-variable-item-Green').click()
-    cy.get('.input-text').clear().type(1)
-    cy.get('.single_add_to_cart_button').click()
-    //ACESSANDO CARRINHO
-    cy.get('.woocommerce-message > .button').click()
-    //CONFIRMAR CARRINHO
-    cy.get('.checkout-button').click()
-    //CONFIRMAR PAGAMENTO
-    cy.get('#billing_first_name').click().clear().type('Lucas')
-    cy.get('#billing_last_name').click().clear().type('Gabriel')
-    cy.get('#billing_address_1').click().clear().type('São Paulo')
-    cy.get('#billing_address_2').click().clear().type('Casa')
-    cy.get('#billing_city').click().clear().type('Andradina')
-    cy.get('#billing_postcode').click().clear().type('16920-000')
-    cy.get('#billing_phone').click().clear().type('50028922')
-    cy.get('#payment_method_cod').click()
-    cy.get('#terms').click()
-    cy.get('#place_order').click()
-    //VALIDANDO MENSAGEM
-    cy.wait(7000); // Espera 5 segundos antes de executar o último teste
-    cy.get('.woocommerce-notice').should('contain' , 'Obrigado. Seu pedido foi recebido.')
+  const produtos = [
+    { id: 2559, tamanho: 'XS', cor: 'Green' },
+    { id: 3073, tamanho: '32', cor: 'Brown' },
+    { id: 3374, tamanho: '34', cor: 'Black' }, // Ajuste a cor conforme necessário
+    { id: 3964, tamanho: 'S', cor: 'Green' },
+  ];
+
+  const dadosCheckout = {
+    nome: 'Lucas',
+    sobrenome: 'Gabriel',
+    endereco: 'São Paulo',
+    complemento: 'Casa',
+    cidade: 'Andradina',
+    cep: '16920-000',
+    telefone: '50028922',
+  };
+
+  const login = (email, senha) => {
+    cy.get('.icon-user-unfollow').click();
+    cy.get('#username').type(email);
+    cy.get('#password').type(senha);
+    cy.get('.woocommerce-form > .button').click();
+  };
+
+  const selecionarProduto = ({ id, tamanho, cor }) => {
+    cy.get('#primary-menu > .menu-item-629 > a').click();
+    cy.get(`.post-${id} > .product-block`).click();
+    cy.get(`.button-variable-item-${tamanho}`).click();
+    cy.get(`.button-variable-item-${cor}`).click();
+    cy.get('.input-text').clear().type(1);
+    cy.get('.single_add_to_cart_button').click();
+  };
+
+  const preencherCheckout = ({
+    nome,
+    sobrenome,
+    endereco,
+    complemento,
+    cidade,
+    cep,
+    telefone
+  }) => {
+    cy.get('#billing_first_name').clear().type(nome);
+    cy.get('#billing_last_name').clear().type(sobrenome);
+    cy.get('#billing_address_1').clear().type(endereco);
+    cy.get('#billing_address_2').clear().type(complemento);
+    cy.get('#billing_city').clear().type(cidade);
+    cy.get('#billing_postcode').clear().type(cep);
+    cy.get('#billing_phone').clear().type(telefone);
+    cy.get('#payment_method_cod').click();
+    cy.get('#terms').click();
+    cy.get('#place_order').click();
+  };
+
+  it('Deve realizar o fluxo completo de compra com 4 produtos', () => {
+    cy.visit('http://lojaebac.ebaconline.art.br/');
+    
+    login(dadosLogin.email, dadosLogin.senha);
+
+    produtos.forEach(produto => {
+      selecionarProduto(produto);
+    });
+
+    // Acessar carrinho e finalizar pedido
+    cy.get('.woocommerce-message > .button').click();
+    cy.get('.checkout-button').click();
+
+    preencherCheckout(dadosCheckout);
+
+    // Validar mensagem de sucesso
+    cy.wait(7000);
+    cy.get('.woocommerce-notice').should('contain', 'Obrigado. Seu pedido foi recebido.');
   });
-})
 
+});
